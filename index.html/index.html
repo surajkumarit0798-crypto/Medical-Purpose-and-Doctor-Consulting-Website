@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare | Integrated Health Hub</title>
+    <!-- Configure Tailwind to support class-based dark mode -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>      
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out, transform 12s linear;
+            background-size: cover;
+            background-position: center;
+        }
+        .hero-slide.active {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.85); /* slate-900 with opacity */
+            border-bottom-color: #334155; /* slate-700 */
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 30px -10px rgba(0, 0, 0, 0.1);
+        }
+        .dark .card-hover:hover {
+            box-shadow: 0 25px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeIn 0.5s ease forwards; }
+
+        .scroll-hide::-webkit-scrollbar { display: none; }
+
+        /* Video Call Pulse Animation */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(13, 148, 136, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
+        }
+        .pulse-active { animation: pulse-ring 2s infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300" onload="init()">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-[100] glass-nav border-b border-slate-200 h-20 flex items-center transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-6 w-full flex justify-between items-center">
+            
+            <!-- Perfected Logo Section (Image Fixed) -->
+           <button onclick="showSection('home')" class="flex items-center cursor-pointer group shrink-0 outline-none">
+                <img src="logo.png" alt="MediCare Logo" class="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105">
+                 <span class="text-xl font-extrabold text-slate-800 dark:text-white  hidden sm:block tracking-tight" data-i18n="logoText" style="color:rgba(13,123,232,0.859);">Medi </span>
+                 <span class="text-x1 font-extrabold text-slate-800 dark:text-White  hidden sm:block tracking-tight" dara-i18n="logoText" style="color:green;height:20px;">Care</span>
+            </button>
+
+            <!-- Desktop Links -->
+            <div class="hidden lg:flex items-center gap-6">
+                <button onclick="showSection('home')" class="text-sm font-semibold hover:text-teal-600 dark:text-slate-300 dark:hover:text-teal-400 transition" data-i18n="home">Home</button>
+                <button onclick="showSection('about')" class="text-sm font-semibold hover:text-teal-600 dark:text-slate-300 dark:hover:text-teal-400 transition" data-i18n="about">About</button>
+                <button onclick="showSection('pharmacy')" class="text-sm font-semibold hover:text-teal-600 dark:text-slate-300 dark:hover:text-teal-400 transition" data-i18n="pharmacy">Pharmacy</button>
+                <button onclick="showSection('consult')" class="text-sm font-semibold hover:text-teal-600 dark:text-slate-300 dark:hover:text-teal-400 transition" data-i18n="doctors">Doctors</button>
+                <!-- Added Health Guide Link to Main Nav -->
+                <button onclick="showSection('blog')" class="text-sm font-semibold hover:text-teal-600 transition">Health Guide</button>
+            
+                <!-- Auth Dependent Nav Links -->
+                <button id="nav-appointments" onclick="showSection('appointments')" class="hidden text-sm font-semibold text-teal-600 bg-teal-50 dark:bg-teal-900/30 dark:text-teal-400 px-3 py-1.5 rounded-lg border border-teal-100 dark:border-teal-800/50 hover:bg-teal-100 dark:hover:bg-teal-800/50 transition" data-i18n="myConsults">My Consults</button>
+                <button id="nav-admin" onclick="showSection('admin')" class="hidden text-sm font-semibold text-white bg-rose-600 px-3 py-1.5 rounded-lg border border-rose-700 shadow-md hover:bg-rose-700 transition"><i class="fas fa-shield-alt mr-1"></i> <span data-i18n="adminPanel">Admin Panel</span></button>
+            </div>
+
+            <!-- Right Side Controls -->
+            <div class="flex items-center gap-2 md:gap-4">
+                
+                <!-- Language Selector -->
+                <div class="relative group cursor-pointer text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition">
+                    <div class="flex items-center gap-1 p-2">
+                        <i class="fas fa-globe text-lg"></i> <span id="current-lang" class="text-sm font-bold hidden md:inline">EN</span>
+                    </div>
+                    <!-- Dropdown -->
+                    <div class="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 hidden group-hover:block z-50 overflow-hidden">
+                        <button onclick="changeLang('EN', 'English')" class="block w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-white font-medium border-b border-slate-50 dark:border-slate-700/50">English (EN)</button>
+                        <button onclick="changeLang('HI', 'Hindi')" class="block w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-white font-medium border-b border-slate-50 dark:border-slate-700/50">Hindi (HI)</button>
+                        <button onclick="changeLang('SP', 'Spanish')" class="block w-full text-left px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-white font-medium">Spanish (SP)</button>
+                    </div>
+                </div>
+
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="p-2 text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition" title="Toggle Dark Mode">
+                    <i id="theme-icon" class="fas fa-moon text-xl"></i>
+                </button>
+
+                <!-- Cart -->
+                <button onclick="showSection('cart')" class="relative p-2 text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+                </button>
+                
+                <div class="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1 hidden md:block"></div>
+
+                <!-- Auth Buttons -->
+                <div id="auth-buttons" class="flex gap-2">
+                    <button onclick="showSection('login')" class="hidden md:block bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition" data-i18n="login">Login</button>
+                    <button onclick="showSection('signup')" class="bg-teal-600 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg shadow-teal-200 dark:shadow-teal-900/40 hover:bg-teal-700 transition" data-i18n="signup">Sign Up</button>
+                </div>
+                
+                <!-- Profile -->
+                <div id="user-profile" class="hidden flex items-center gap-3 md:gap-4 pl-2">
+                    <div class="w-8 h-8 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-full flex items-center justify-center font-bold text-xs" id="user-avatar">U</div>
+                    <span id="welcome-text" class="text-sm font-bold text-slate-600 dark:text-slate-300 hidden md:block"></span>
+                    <button onclick="handleLogout()" class="text-sm text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-semibold" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-20">
+        <!-- HOME SECTION -->
+        <section id="home-section" class="section-container">
+            <div class="relative h-[700px] overflow-hidden flex items-center">
+                <div id="hero-slides">
+                    <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1600&q=80')"></div>
+                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=1600&q=80')"></div>
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent"></div>
+                <div class="relative z-10 max-w-7xl mx-auto px-6 w-full text-white">
+                    <div class="max-w-2xl animate-in">
+                        <span class="inline-block px-4 py-1.5 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 text-xs font-bold tracking-widest mb-6 backdrop-blur-md uppercase" data-i18n="heroSubtitle">Next-Gen Patient Care</span>
+                        <h1 class="text-5xl md:text-7xl font-extrabold leading-tight mb-6">
+                            <span data-i18n="heroTitle1">Fast, Safe & Reliable</span> <br class="md:hidden">
+                            <span class="text-teal-400 text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-emerald-400" data-i18n="heroTitle2">Medicines Delivered</span>
+                        </h1>
+                        <p class="text-xl text-slate-200 mb-10 leading-relaxed max-w-lg drop-shadow-md" data-i18n="heroDesc">Access professional medical consultation, order pharmaceuticals, and get expert first-aid advice tailored to your needs.</p>
+                        <div class="flex flex-wrap gap-5">
+                           <button onclick="showSection('consult')" class="bg-teal-500 hover:bg-teal-600 px-10 py-5 rounded-2xl font-bold transition-all shadow-2xl shadow-teal-500/30">Consult a Specialist</button>
+                          </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Features -->
+             <div class="max-w-7xl mx-auto px-6 py-20">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-sm font-bold text-teal-500 uppercase tracking-[0.3em] mb-4">Core Ecosystem</h2>
+                    <h3 class="text-4xl md:text-5xl font-extrabold mb-6">Our Platform Features</h3>
+                    <br>
+                    </div>
+<div class="max-w-7xl mx-auto px-6 -mt-36 relative z-20 pointer-events-none">
+    <div class="grid md:grid-cols-4 gap-6 pt-12 pointer-events-auto">
+                    <div class="bg-white dark:bg-slate-800 p-8 rounded-[32px] shadow-xl dark:shadow-2xl border border-slate-100 dark:border-slate-700 card-hover transition-all">
+                        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-5"><i class="fas fa-video text-xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2 dark:text-white" data-i18n="feat1">HD Tele-Health</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm" data-i18n="feat1Desc">Encrypted high-quality video calls with specialists instantly.</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-8 rounded-[32px] shadow-xl dark:shadow-2xl border border-slate-100 dark:border-slate-700 card-hover transition-all">
+                        <div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-xl flex items-center justify-center mb-5"><i class="fas fa-truck-moving text-xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2 dark:text-white" data-i18n="feat2">Fast Rx Delivery</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm" data-i18n="feat2Desc">Prescribed medicines delivered within hours of consultation.</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-8 rounded-[32px] shadow-xl dark:shadow-2xl border border-slate-100 dark:border-slate-700 card-hover transition-all">
+                        <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-xl flex items-center justify-center mb-5"><i class="fas fa-notes-medical text-xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2 dark:text-white" data-i18n="feat3">E-Records</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm" data-i18n="feat3Desc">Securely store and share your medical history with doctors.</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-8 rounded-[32px] shadow-xl dark:shadow-2xl border border-slate-100 dark:border-slate-700 card-hover transition-all">
+                        <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mb-5"><i class="fas fa-star-of-life text-xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2 dark:text-white" data-i18n="feat4">Emergency Hub</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm" data-i18n="feat4Desc">Direct linkage to first responders and quick aid tutorials.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Home Page Health Guide Preview -->
+            <div class="max-w-7xl mx-auto px-6 py-20 mt-10">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
+                    <div>
+                        <span class="text-teal-600 dark:text-teal-400 font-bold tracking-widest text-sm uppercase mb-2 block" data-i18n="healthGuide">Health Guide</span>
+                        <h2 class="text-4xl font-extrabold mb-4 dark:text-white">First Aid & Wellness Tips</h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-lg max-w-2xl">Essential medical advice and step-by-step emergency guidelines curated by our top specialists.</p>
+                    </div>
+                    <button onclick="showSection('blog')" class="bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/50 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap">View All Articles &rarr;</button>
+                </div>
+                <!-- Injected via JS -->
+                <div class="grid md:grid-cols-3 gap-8" id="home-blog-grid"></div>
+            </div>
+        </section>
+
+        <!-- ABOUT SECTION -->
+        <section id="about-section" class="hidden max-w-7xl mx-auto px-6 py-20 animate-in">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                <div class="w-full lg:w-1/2">
+                    <span class="text-teal-600 dark:text-teal-400 font-bold tracking-widest text-sm uppercase mb-3 block">Our Mission</span>
+                    <h2 class="text-4xl md:text-5xl font-extrabold mb-6 leading-tight text-slate-900 dark:text-white">Empowering your health, <br>every single day.</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-lg mb-8 leading-relaxed">MediCare was founded on a simple principle: high-quality healthcare should be accessible to everyone, anywhere. We bridge the gap between patients and specialists by integrating tele</p>
+                    <p  class="text-slate-500 dark:text-slate-400 text-lg mb-8 leading-relaxed">At our medical platform, we are dedicated to providing reliable, accurate, and accessible healthcare information to everyone.
+Our team is committed to maintaining high standards of medical accuracy and ensuring that all content is regularly updated and verified. Whether you are looking for basic health tips or detailed medical guidance, we aim to support your journey toward a healthier life.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-8 mt-8 border-t border-slate-100 dark:border-slate-800 pt-8">
+                        <div>
+                            <h4 class="text-4xl font-black text-teal-600 dark:text-teal-400 mb-1">50+</h4>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-bold">Happy Patients</p>
+                        </div>
+                        <div>
+                            <h4 class="text-4xl font-black text-teal-600 dark:text-teal-400 mb-1">20+</h4>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-bold">Top Specialists</p>
+                        </div>
+                        <div>
+                            <h4 class="text-4xl font-black text-teal-600 dark:text-teal-400 mb-1">24/7</h4>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-bold">Active Support</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full lg:w-1/2 relative">
+                    <img src="https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80" alt="Medical Facility" class="rounded-[40px] shadow-2xl object-cover h-[500px] w-full border border-slate-100 dark:border-slate-800">
+                    <div class="absolute -bottom-8 -left-8 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 flex items-center gap-5">
+                        <div class="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl"><i class="fas fa-award"></i></div>
+                        <div>
+                            <p class="font-extrabold text-slate-900 dark:text-white text-lg">Certified</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Medical Hub 2026</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PHARMACY SECTION -->
+        <section id="pharmacy-section" class="hidden max-w-7xl mx-auto px-6 py-16">
+            <h2 class="text-4xl font-extrabold mb-4 dark:text-white">Online Pharmacy</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-10 text-lg">Order your prescriptions and over-the-counter medicine directly to your door.</p>
+            <div id="medicine-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"></div>
+        </section>
+
+        <!-- CONSULT SECTION -->
+        <section id="consult-section" class="hidden max-w-7xl mx-auto px-6 py-16">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-extrabold mb-4 dark:text-white">World-Class Specialists</h2>
+                <p class="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">Book instant video appointments with highly rated doctors across multiple specialties.</p>
+            </div>
+            <div id="doctor-list" class="grid md:grid-cols-2 gap-10">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- USER APPOINTMENTS SECTION -->
+        <section id="appointments-section" class="hidden max-w-5xl mx-auto px-6 py-16 animate-in">
+            <h2 class="text-3xl font-extrabold mb-4 dark:text-white" data-i18n="myConsults">My Consultations</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-10">Manage your booked appointments and join video calls here.</p>
+            
+            <div id="user-appointments-list" class="space-y-6">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- BLOG / FIRST AID SECTION -->
+       <section id="blog-section" class="hidden max-w-7xl mx-auto px-6 py-16 animate-in">
+            <h2 class="text-4xl font-extrabold mb-4 dark:text-white">Complete Health Guide</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-10 text-lg">Browse through our extensive library of medical advice and emergency guidelines.</p>
+            <div class="grid md:grid-cols-3 gap-8" id="blog-grid"></div>
+        </section>
+        <div class="max-w-7xl mx-auto px-6 py-20 border-t border-slate-100 dark:border-slate-900">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                    </div>
+                <div id="home-blog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Dynamic -->
+                     
+                </div>
+            </div>
+        </section>
+
+        
+
+        <!-- CART SECTION -->
+        <section id="cart-section" class="hidden max-w-4xl mx-auto px-6 py-16 animate-in">
+            <h2 class="text-3xl font-extrabold mb-10 dark:text-white">Shopping Cart</h2>
+            
+            <div class="grid lg:grid-cols-3 gap-10">
+                <!-- Left: Items List -->
+                <div id="cart-items" class="lg:col-span-2 space-y-6"></div>
+
+                <!-- Right: Payment & Summary Panel -->
+                <div id="cart-summary" class="hidden bg-white dark:bg-slate-800 p-8 rounded-[40px] border border-slate-100 dark:border-slate-700 shadow-xl h-fit sticky top-24">
+                    <!-- Content injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN PANEL SECTION -->
+        <section id="admin-section" class="hidden max-w-7xl mx-auto px-6 py-16 bg-slate-100 dark:bg-slate-800/50 rounded-[48px] mt-10 shadow-inner">
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <h2 class="text-4xl font-extrabold text-slate-900 dark:text-white">Admin Control Center</h2>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Manage user consultations, doctors, and pharmacy orders.</p>
+                </div>
+                <button onclick="showSection('home')" class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-6 py-3 rounded-xl font-bold border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700">Exit Admin</button>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-12">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest">Total Users</p>
+                        <p class="text-3xl font-black mt-1 dark:text-white">1,432</p>
+                    </div>
+                    <div class="w-14 h-14 bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-users"></i></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest">Pending Consults</p>
+                        <p class="text-3xl font-black mt-1 text-rose-500 dark:text-rose-400" id="admin-pending-count">0</p>
+                    </div>
+                    <div class="w-14 h-14 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-clock"></i></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest">Active Consults</p>
+                        <p class="text-3xl font-black mt-1 text-indigo-600 dark:text-indigo-400" id="admin-active-count">0</p>
+                    </div>
+                    <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-video"></i></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Consultations Table -->
+            <div class="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden mb-10">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 flex justify-between items-center">
+                    <h3 class="font-bold text-xl dark:text-white"><i class="fas fa-stethoscope text-teal-600 dark:text-teal-400 mr-2"></i> Consultation Requests</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                        <thead class="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="p-6 border-b dark:border-slate-700">Appt ID</th>
+                                <th class="p-6 border-b dark:border-slate-700">Patient</th>
+                                <th class="p-6 border-b dark:border-slate-700">Requested Doctor</th>
+                                <th class="p-6 border-b dark:border-slate-700">Status</th>
+                                <th class="p-6 border-b dark:border-slate-700 text-right">Admin Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-appointments-tbody" class="divide-y divide-slate-100 dark:divide-slate-700">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- LOGIN/SIGNUP SECTIONS -->
+        <section id="login-section" class="hidden max-w-md mx-auto px-6 py-24 animate-in">
+            <div class="bg-white dark:bg-slate-800 p-12 rounded-[48px] shadow-2xl border border-slate-100 dark:border-slate-700">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-teal-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-teal-200 dark:shadow-none">
+                        <i class="fas fa-lock text-3xl"></i>
+                    </div>
+                    <h2 class="text-3xl font-extrabold dark:text-white" data-i18n="login">Secure Login</h2>
+                </div>
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <input id="login-email" type="email" required placeholder="Email Address" class="w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-teal-500 outline-none transition bg-slate-50 dark:bg-slate-900 dark:text-white">
+                    <input id="login-pass" type="password" required placeholder="Password" class="w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-teal-500 outline-none transition bg-slate-50 dark:bg-slate-900 dark:text-white">
+                    <button type="submit" class="w-full bg-teal-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-200 dark:shadow-none hover:bg-teal-700 transition-all mt-4">Enter Dashboard</button>
+                </form>
+                <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">New user? <button onclick="showSection('signup')" class="text-teal-600 dark:text-teal-400 font-bold hover:underline" data-i18n="signup">Create an account</button></p>
+            </div>
+        </section>
+
+        <section id="signup-section" class="hidden max-w-md mx-auto px-6 py-24 animate-in">
+            <div class="bg-white dark:bg-slate-800 p-12 rounded-[48px] shadow-2xl border border-slate-100 dark:border-slate-700">
+                <div class="text-center mb-10">
+                    <div class="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-200 dark:shadow-none"><i class="fas fa-user-plus text-3xl"></i></div>
+                    <h2 class="text-3xl font-extrabold dark:text-white" data-i18n="signup">Create Account</h2>
+                </div>
+                <form onsubmit="handleSignup(event)" class="space-y-4">
+                    <input id="signup-name" type="text" required placeholder="Full Name" class="w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition bg-slate-50 dark:bg-slate-900 dark:text-white">
+                    <input id="signup-email" type="email" required placeholder="Email Address" class="w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition bg-slate-50 dark:bg-slate-900 dark:text-white">
+                    <input id="signup-pass" type="password" required placeholder="Create Password" class="w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition bg-slate-50 dark:bg-slate-900 dark:text-white">
+                    <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 dark:shadow-none hover:bg-blue-700 transition-all mt-4" data-i18n="signup">Sign Up</button>
+                </form>
+                <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">Already joined? <button onclick="showSection('login')" class="text-blue-600 dark:text-blue-400 font-bold hover:underline" data-i18n="login">Log in</button></p>
+            </div>
+        </section>
+    </main>
+
+    <!-- FULL SCREEN VIDEO CALL INTERFACE (Hidden by default) -->
+    <div id="videocall-container" class="hidden fixed inset-0 z-[500] bg-slate-950 flex flex-col justify-between overflow-hidden">
+        
+        <!-- Header -->
+        <div class="p-6 flex justify-between items-center z-10 bg-gradient-to-b from-black/60 to-transparent">
+            <div class="flex items-center gap-4 text-white">
+                <div class="flex items-center gap-2 bg-rose-500/20 text-rose-500 px-3 py-1 rounded-full text-xs font-bold border border-rose-500/30">
+                    <div class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div> LIVE REC
+                </div>
+                <span class="font-bold opacity-80" id="vc-timer">00:00</span>
+            </div>
+            <div class="text-white font-bold text-xl drop-shadow-md">Encrypted Tele-Health Room</div>
+            <div class="w-10"></div> <!-- Spacer -->
+        </div>
+
+        <!-- Main Video Area (Doctor/Patient) -->
+        <div class="absolute inset-0 flex items-center justify-center">
+            <img id="vc-main-img" src="" class="w-full h-full object-cover opacity-80">
+            <div class="absolute inset-0 bg-slate-900/20 mix-blend-multiply"></div>
+            
+            <!-- Connection Text (Simulated) -->
+            <div id="vc-connecting" class="absolute flex flex-col items-center">
+                <div class="w-24 h-24 rounded-full border-4 border-teal-500/30 border-t-teal-400 animate-spin mb-4"></div>
+                <p class="text-white font-bold text-xl">Establishing Secure Connection...</p>
+            </div>
+        </div>
+
+        <!-- Picture in Picture (Self Video) -->
+        <div class="absolute bottom-32 right-10 w-48 h-64 bg-slate-800 rounded-3xl border-4 border-slate-700 overflow-hidden shadow-2xl z-20">
+            <!-- Simulated Webcam Placeholder -->
+            <div class="w-full h-full bg-slate-700 flex flex-col items-center justify-center text-slate-500 relative">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80" class="w-full h-full object-cover">
+                <div class="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded">You</div>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="p-8 z-10 bg-gradient-to-t from-black/80 to-transparent flex justify-center items-center gap-6 pb-12">
+            <button class="w-14 h-14 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition flex items-center justify-center text-xl shadow-lg border border-slate-600"><i class="fas fa-microphone"></i></button>
+            <button class="w-14 h-14 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition flex items-center justify-center text-xl shadow-lg border border-slate-600"><i class="fas fa-video"></i></button>
+            <button onclick="endVideoCall()" class="w-20 h-20 rounded-[2rem] bg-rose-600 text-white hover:bg-rose-700 transition flex items-center justify-center text-3xl shadow-rose-500/50 shadow-2xl transform hover:scale-105"><i class="fas fa-phone-slash"></i></button>
+            <button class="w-14 h-14 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition flex items-center justify-center text-xl shadow-lg border border-slate-600"><i class="fas fa-desktop"></i></button>
+            <button class="w-14 h-14 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition flex items-center justify-center text-xl shadow-lg border border-slate-600"><i class="fas fa-comment-medical"></i></button>
+        </div>
+    </div>
+
+    <!-- GLOBAL MODAL -->
+    <div id="modal-container" class="fixed inset-0 z-[400] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-[40px] overflow-hidden shadow-2xl transform transition-all text-center border border-slate-200 dark:border-slate-700 flex flex-col max-h-[90vh]" id="modal-body">
+            <div id="modal-content" class="p-10 overflow-y-auto scroll-hide dark:text-white flex-1 text-center">
+                <!-- Dynamic Content -->
+            </div>
+            <div class="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 shrink-0">
+                <button id="modal-close-btn" onclick="closeModal()" class="w-full py-4 bg-slate-900 dark:bg-teal-600 text-white rounded-2xl font-bold hover:bg-teal-600 dark:hover:bg-teal-700 transition shadow-md">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-20 mt-32">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-16">
+            <div class="col-span-1">
+                 <button onclick="showSection('home')" class="flex items-center cursor-pointer group shrink-0 outline-none">
+                <img src="logo.png" alt="MediCare Logo" class="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105">
+                 <span class="text-xl font-extrabold text-slate-800 dark:text-white  hidden sm:block tracking-tight" data-i18n="logoText" style="color:rgba(13,123,232,0.859);">Medi </span>
+                 <span class="text-x1 font-extrabold text-slate-800 dark:text-White  hidden sm:block tracking-tight" dara-i18n="logoText" style="color:green;height:20px;">Care</span>
+            </button>
+                <p class="text-sm leading-relaxed mb-6">Revolutionizing healthcare accessibility through technology and compassion.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-teal-600 hover:text-white transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-teal-600 hover:text-white transition"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-teal-600 hover:text-white transition"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-lg mb-8">Services</h4>
+                <ul class="space-y-4 text-sm">
+                    <li><button onclick="showSection('pharmacy')" class="hover:text-white transition">Online Store</button></li>
+                    <li><button onclick="showSection('consult')" class="hover:text-white transition">Tele-Health</button></li>
+                    <li><button onclick="showSection('blog')" class="hover:text-white transition">Medical Articles</button></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-lg mb-8">Support</h4>
+                <ul class="space-y-4 text-sm">
+                    <li><a href="#" class="hover:text-white transition">Help Center</a></li>
+                    <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-white transition">Terms of Use</a></li>
+                </ul>
+            </div>
+            <div class="bg-white/5 p-8 rounded-3xl border border-white/10">
+                <h4 class="text-white font-bold mb-4">Newsletter</h4>
+                <p class="text-xs mb-6">Get weekly health tips and updates.</p>
+                <div class="flex gap-2">
+                    <input type="email" placeholder="Email" class="bg-white/10 border border-white/10 rounded-xl px-4 py-2 text-sm w-full outline-none focus:ring-1 focus:ring-teal-500">
+                    <button class="bg-teal-600 text-white p-2 rounded-xl"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-6 border-t border-white/5 mt-20 pt-10 text-center text-xs">
+            &copy; 2026 MediCare Platform. All rights reserved. Professional healthcare simulation.
+        </div>
+    </footer>
+    <script>
+        // --- TRANSLATION DICTIONARY ---
+        const translations = {
+            EN: {
+                home: "Home", about: "About", pharmacy: "Pharmacy", doctors: "Doctors", healthGuide: "Health Guide", myConsults: "My Consults", adminPanel: "Admin Panel",
+                login: "Login", signup: "Sign Up",
+                heroSubtitle: "Next-Gen Patient Care",
+                heroTitle1: "Fast, Safe & Reliable",
+                heroTitle2: "Medicines Delivered",
+                heroDesc: "Access professional medical consultation, order pharmaceuticals, and get expert first-aid advice tailored to your needs.",
+                bookDoc: "Book a Doctor",
+                langUpdated: "Language Updated",
+                langDesc: "The platform language has been changed to",
+                logoText: "MediCare",
+                modalGotIt: "Got it",
+                feat1: "HD Tele-Health",
+                feat1Desc: "Encrypted high-quality video calls with specialists instantly.",
+                feat2: "Fast Rx Delivery",
+                feat2Desc: "Prescribed medicines delivered within hours of consultation.",
+                feat3: "E-Records",
+                feat3Desc: "Securely store and share your medical history with doctors.",
+                feat4: "Emergency Hub",
+                feat4Desc: "Direct linkage to first responders and quick aid tutorials."
+            },
+            HI: {
+                home: "होम", about: "हमारे बारे में", pharmacy: "फ़ार्मेसी", doctors: "डॉक्टर", healthGuide: "स्वास्थ्य गाइड", myConsults: "मेरे परामर्श", adminPanel: "व्यवस्थापक पैनल",
+                login: "लॉग इन", signup: "साइन अप",
+                heroSubtitle: "नेक्स्ट-जेन पेशेंट केयर",
+                heroTitle1: "तेज, सुरक्षित और विश्वसनीय",
+                heroTitle2: "दवाओं की डिलीवरी",
+                heroDesc: "पेशेवर चिकित्सा परामर्श प्राप्त करें, दवाएं ऑर्डर करें, और अपनी आवश्यकताओं के अनुसार विशेषज्ञ प्राथमिक चिकित्सा सलाह प्राप्त करें।",
+                bookDoc: "डॉक्टर बुक करें",
+                langUpdated: "भाषा अपडेट की गई",
+                langDesc: "प्लेटफ़ॉर्म की भाषा बदल दी गई है",
+                logoText: "मेडीकेयर",
+                modalGotIt: "समझ गया",
+                feat1: "एचडी टेली-हेल्थ",
+                feat1Desc: "विशेषज्ञों के साथ तुरंत एन्क्रिप्टेड उच्च गुणवत्ता वाले वीडियो कॉल।",
+                feat2: "तेज़ दवा डिलीवरी",
+                feat2Desc: "परामर्श के कुछ ही घंटों के भीतर निर्धारित दवाएं वितरित।",
+                feat3: "ई-रिकॉर्ड्स",
+                feat3Desc: "डॉक्टरों के साथ अपना चिकित्सा इतिहास सुरक्षित रूप से संग्रहीत और साझा करें।",
+                feat4: "इमरजेंसी हब",
+                feat4Desc: "प्रथम उत्तरदाताओं से सीधा संपर्क और त्वरित सहायता ट्यूटोरियल।"
+            },
+            SP: {
+                home: "Inicio", about: "Acerca de", pharmacy: "Farmacia", doctors: "Doctores", healthGuide: "Guía de Salud", myConsults: "Mis Consultas", adminPanel: "Panel de Admin",
+                login: "Acceder", signup: "Regístrate",
+                heroSubtitle: "Cuidado del Paciente",
+                heroTitle1: "Rápido, Seguro y Confiable",
+                heroTitle2: "Medicamentos Entregados",
+                heroDesc: "Acceda a consultas médicas profesionales, pida productos farmacéuticos y obtenga asesoramiento experto en primeros auxilios adaptado a sus necesidades.",
+                bookDoc: "Reservar Doctor",
+                langUpdated: "Idioma Actualizado",
+                langDesc: "El idioma de la plataforma se ha cambiado a",
+                logoText: "MediCare",
+                modalGotIt: "Entendido",
+                feat1: "Tele-Salud HD",
+                feat1Desc: "Videollamadas encriptadas de alta calidad con especialistas al instante.",
+                feat2: "Entrega Rápida",
+                feat2Desc: "Medicamentos recetados entregados horas después de la consulta.",
+                feat3: "Registros Electrónicos",
+                feat3Desc: "Almacene y comparta de forma segura su historial médico.",
+                feat4: "Centro de Emergencia",
+                feat4Desc: "Enlace directo a primeros auxilios y tutoriales de ayuda rápida."
+            }
+        };
+
+        // --- DATA & STATE ---
+        const medicines = [
+            { id: 1, name: 'Amoxicillin 500mg', cat: 'Antibiotics', price: 12.50, rx: true, img: 'medicine1.jpg' },
+            { id: 2, name: 'Paracetamol 500mg', cat: 'Pain Relief', price: 4.99, rx: false, img: 'para.jpg' },
+            { id: 3, name: 'Lisinopril 10mg', cat: 'Hypertension', price: 18.20, rx: true, img: 'medicine.jpg' },
+            { id: 4, name: 'Vitamin C 1000mg', cat: 'Immunity', price: 9.99, rx: false, img: 'vitamin.jpg' },
+            { id: 5, name: 'Ibuprofen 400mg', cat: 'Pain Relief', price: 6.50, rx: false, img: 'ibuprofen.jpg' },
+            { id: 6, name: 'Premium Bandages', cat: 'First Aid', price: 5.49, rx: false, img: 'band.jpg' },
+            { id: 7, name: 'Cough Syrup 150ml', cat: 'Cold & Flu', price: 8.75, rx: false, img: 'selection.jpg' },
+            { id: 8, name: 'Surgical Masks (50pk)', cat: 'Equipment', price: 14.99, rx: false, img: 'mask.jpg' }
+        ];
+
+        const doctors = [
+            { id: 1, name: 'Dr. Kavita upadhyay', spec: 'Cardiologist', img: 'doctor1.jpg', rate: '4.9', exp: '15 Yrs', bio: 'Specialist in robotic heart surgery and chronic hypertension.' },
+            { id: 2, name: 'Dr. Naman gupta', spec: 'General Physician', img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=400&q=80', rate: '4.8', exp: '10 Yrs', bio: 'Focused on preventative medicine and holistic care.' },
+            { id: 3, name: 'Dr. Karan adhikari ', spec: 'Dermatologist', img: 'doctor.jpg', rate: '4.7', exp: '8 Yrs', bio: 'Expert in clinical dermatology and advanced skin treatment.' },
+            { id: 4, name: 'Dr. Rahul negi', spec: 'Neurologist', img: 'doctor4.jpg', rate: '4.9', exp: '20 Yrs', bio: 'Renowned researcher in neurodegenerative diseases.' },
+        ];
+
+        const articles = [
+            { id: 'burns', title: 'Managing Kitchen Burns', category: 'Emergency', img: 'burn.jpg' },
+            { id: 'sprains', title: 'The R.I.C.E Method', category: 'Injuries', img: 'wound.jpg' },
+            { id: 'scratches', title: 'Small Wound Care', category: 'First Aid', img: 'skin-infection.jpg' },
+             { id: 'b5', title: 'Nutritional Value of Superfoods', category: 'Wellness', readTime: '8 min', img: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=400&q=80' },
+            { id: 'b6', title: 'Understanding Sleep Hygiene', category: 'Lifestyle', readTime: '7 min', img: 'sleep.jpg' },
+            { id: 'b7', title: 'Meditation for Mental Health', category: 'Psychology', readTime: '5 min', img: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=400&q=80' },
+            { id: 'b8', title: 'Travel Health Precautions 2024', category: 'Safety', readTime: '10 min', img: 'https://images.unsplash.com/photo-1500835556837-99ac94a94552?auto=format&fit=crop&w=400&q=80' }
+          
+        ];
+
+        let cart = [];
+        let appointments = []; 
+        let currentUser = null;
+        let slideIndex = 0;
+        let activeCallTimer;
+        let isDarkMode = false;
+        let currentLangCode = 'EN';
+
+        // --- CORE INITIALIZATION ---
+        function init() {
+            renderMedicines(medicines);
+            renderDoctors();
+            renderArticles();
+            startHero();
+            updateCart();
+            checkAuth();
+
+        
+
+            // Check system preference for dark mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                toggleTheme();
+            }
+        }
+
+        // --- THEME & LANGUAGE ---
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            if (isDarkMode) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        function changeLang(code, name) {
+            currentLangCode = code;
+            document.getElementById('current-lang').innerText = code;
+            
+            // Apply text translations from dictionary
+            const langData = translations[code];
+            if(langData) {
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if(langData[key]) {
+                        el.innerText = langData[key];
+                    }
+                });
+            }
+
+            openModal(`
+                <div class="text-teal-500 text-5xl mb-4 text-center"><i class="fas fa-language"></i></div>
+                <h2 class="text-2xl font-bold dark:text-white text-center">${langData.langUpdated || 'Language Updated'}</h2>
+                <p class="mt-2 text-slate-500 dark:text-slate-400 text-center">${langData.langDesc || 'The platform language has been changed to'} <b>${name}</b>.</p>
+            `);
+        }
+
+        function showSection(id) {
+            if(id === 'admin' && (!currentUser || currentUser.role !== 'admin')) {
+                openModal('<div class="text-rose-600 text-5xl mb-4 text-center"><i class="fas fa-lock"></i></div><h2 class="text-2xl font-bold dark:text-white text-center">Access Denied</h2><p class="mt-2 text-slate-500 dark:text-slate-400 text-center">Administrator privileges required.</p>');
+                return;
+            }
+            if(id === 'appointments' && !currentUser) {
+                showSection('login');
+                return;
+            }
+
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id + '-section').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+
+            if(id === 'admin') renderAdminPanel();
+            if(id === 'appointments') renderUserAppointments();
+        }
+
+        function startHero() {
+            const slides = document.querySelectorAll('.hero-slide');
+            setInterval(() => {
+                slides[slideIndex].classList.remove('active');
+                slideIndex = (slideIndex + 1) % slides.length;
+                slides[slideIndex].classList.add('active');
+            }, 6000);
+        }
+
+        // --- AUTHENTICATION ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const role = email.includes('admin') ? 'admin' : 'user';
+            const name = email.split('@')[0];
+            
+            currentUser = { name: name.charAt(0).toUpperCase() + name.slice(1), email, role };
+            checkAuth();
+            showSection(role === 'admin' ? 'admin' : 'home');
+            
+            if(role === 'admin' && appointments.length === 0) {
+                appointments.push({
+                    id: 'APT-1001', user: 'John Doe', doctorId: 1, docName: 'Dr. Sarah Jenkins',
+                    docImg: doctors[0].img, status: 'Pending', date: new Date().toLocaleDateString()
+                });
+                renderAdminPanel();
+            }
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            currentUser = { name, role: 'user' };
+            checkAuth();
+            showSection('home');
+            openModal(`<div class="text-teal-500 text-5xl mb-4 text-center"><i class="fas fa-check-circle"></i></div><h2 class="text-2xl font-bold dark:text-white text-center">Welcome, ${name}!</h2><p class="mt-2 text-slate-500 dark:text-slate-400 text-center">Your secure patient account has been created.</p>`);
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            checkAuth();
+            showSection('home');
+        }
+
+        function checkAuth() {
+            const btns = document.getElementById('auth-buttons');
+            const profile = document.getElementById('user-profile');
+            const adminLink = document.getElementById('nav-admin');
+            const apptLink = document.getElementById('nav-appointments');
+
+            if(currentUser) {
+                btns.classList.add('hidden');
+                profile.classList.remove('hidden');
+                document.getElementById('welcome-text').innerText = currentUser.name;
+                document.getElementById('user-avatar').innerText = currentUser.name.charAt(0).toUpperCase();
+                
+                if(currentUser.role === 'admin') {
+                    adminLink.classList.remove('hidden');
+                    apptLink.classList.add('hidden');
+                } else {
+                    adminLink.classList.add('hidden');
+                    apptLink.classList.remove('hidden');
+                }
+            } else {
+                btns.classList.remove('hidden');
+                profile.classList.add('hidden');
+                adminLink.classList.add('hidden');
+                apptLink.classList.add('hidden');
+            }
+        }
+
+        // --- CONSULTATIONS & ADMIN ---
+        function renderDoctors() {
+            const grid = document.getElementById('doctor-list');
+            grid.innerHTML = doctors.map(d => `
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-xl flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
+                    <img src="${d.img}" class="w-32 h-32 rounded-3xl object-cover shadow-md">
+                    <div class="flex-1">
+                        <span class="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-md">${d.spec}</span>
+                        <h3 class="font-bold text-xl mt-2 dark:text-white">${d.name}</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">${d.bio}</p>
+                        <button onclick="requestConsult(${d.id})" class="mt-4 w-full bg-slate-900 dark:bg-teal-600 text-white py-3 rounded-xl font-bold hover:bg-teal-600 dark:hover:bg-teal-700 transition flex items-center justify-center gap-2">
+                            <i class="fas fa-video"></i> Book Video Consult
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function requestConsult(docId) {
+            if(!currentUser) {
+                showSection('login');
+                return;
+            }
+            if(currentUser.role === 'admin') {
+                openModal('<p class="dark:text-white text-center">Admins cannot book consultations.</p>');
+                return;
+            }
+
+            const doc = doctors.find(d => d.id === docId);
+            const apptId = 'APT-' + Math.floor(Math.random() * 9000 + 1000);
+            
+            appointments.push({
+                id: apptId,
+                user: currentUser.name,
+                doctorId: doc.id,
+                docName: doc.name,
+                docImg: doc.img,
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            });
+
+            openModal(`
+                <div class="text-teal-500 text-5xl mb-4 text-center"><i class="fas fa-calendar-check"></i></div>
+                <h2 class="text-2xl font-bold dark:text-white text-center">Request Sent!</h2>
+                <p class="mt-2 text-slate-500 dark:text-slate-400 text-center">Your consultation request for <b>${doc.name}</b> has been sent to the administration. You can join the video call from "My Consults" once approved.</p>
+            `);
+            
+            renderAdminPanel();
+        }
+
+        function renderUserAppointments() {
+            const list = document.getElementById('user-appointments-list');
+            const myAppts = appointments.filter(a => a.user === currentUser.name);
+
+            if(myAppts.length === 0) {
+                list.innerHTML = `<div class="bg-white dark:bg-slate-800 p-10 rounded-3xl border border-slate-100 dark:border-slate-700 text-center text-slate-400">No consultations booked yet.</div>`;
+                return;
+            }
+
+            list.innerHTML = myAppts.map(app => `
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-between">
+                    <div class="flex items-center gap-6">
+                        <img src="${app.docImg}" class="w-16 h-16 rounded-2xl object-cover border border-slate-100 dark:border-slate-700">
+                        <div>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 font-bold mb-1">ID: ${app.id} | ${app.date}</p>
+                            <h4 class="font-bold text-xl dark:text-white">${app.docName}</h4>
+                            <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${
+                                app.status === 'Pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                app.status === 'Approved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 pulse-active' :
+                                'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'
+                            }">${app.status === 'Approved' ? 'Ready for Call' : app.status}</span>
+                        </div>
+                    </div>
+                    <div>
+                        ${app.status === 'Approved' ? `
+                            <button onclick="startVideoCall('${app.docImg}', '${app.docName}')" class="bg-teal-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-teal-200 dark:shadow-none hover:bg-slate-900 dark:hover:bg-teal-700 transition flex items-center gap-2">
+                                <i class="fas fa-video"></i> Join Call
+                            </button>
+                        ` : `
+                            <button disabled class="bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 px-6 py-3 rounded-2xl font-bold cursor-not-allowed flex items-center gap-2">
+                                <i class="fas fa-lock"></i> Waiting
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAdminPanel() {
+            const tbody = document.getElementById('admin-appointments-tbody');
+            
+            const pending = appointments.filter(a => a.status === 'Pending').length;
+            const active = appointments.filter(a => a.status === 'Approved').length;
+            
+            document.getElementById('admin-pending-count').innerText = pending;
+            document.getElementById('admin-active-count').innerText = active;
+
+            if(appointments.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 italic">No appointments in the system.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = appointments.slice().reverse().map(app => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition border-b border-slate-100 dark:border-slate-700/50">
+                    <td class="p-6 font-mono font-bold text-slate-900 dark:text-slate-300">${app.id}</td>
+                    <td class="p-6 font-bold dark:text-white">${app.user}</td>
+                    <td class="p-6">
+                        <div class="flex items-center gap-3 dark:text-slate-200">
+                            <img src="${app.docImg}" class="w-8 h-8 rounded-full object-cover">
+                            ${app.docName}
+                        </div>
+                    </td>
+                    <td class="p-6">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${
+                            app.status === 'Pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                            app.status === 'Approved' ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' :
+                            'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300'
+                        }">${app.status}</span>
+                    </td>
+                    <td class="p-6 text-right">
+                        ${app.status === 'Pending' ? `
+                            <button onclick="approveAppointment('${app.id}')" class="text-white bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">Approve</button>
+                        ` : app.status === 'Approved' ? `
+                            <button onclick="startVideoCall('${app.docImg}', '${app.docName}')" class="text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition"><i class="fas fa-video mr-1"></i> Join Call</button>
+                        ` : `<span class="text-xs text-slate-400">Completed</span>`}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function approveAppointment(apptId) {
+            const appt = appointments.find(a => a.id === apptId);
+            if(appt) {
+                appt.status = 'Approved';
+                renderAdminPanel();
+            }
+        }
+
+        // --- VIDEO CALL SIMULATION ---
+        function startVideoCall(imageSrc, doctorName) {
+            const vcContainer = document.getElementById('videocall-container');
+            const mainImg = document.getElementById('vc-main-img');
+            const loading = document.getElementById('vc-connecting');
+            const timerEl = document.getElementById('vc-timer');
+            
+            mainImg.src = imageSrc;
+            vcContainer.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            mainImg.classList.add('blur-md');
+            timerEl.innerText = "00:00";
+
+            setTimeout(() => {
+                loading.classList.add('hidden');
+                mainImg.classList.remove('blur-md');
+                
+                let seconds = 0;
+                activeCallTimer = setInterval(() => {
+                    seconds++;
+                    const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                    const s = String(seconds % 60).padStart(2, '0');
+                    timerEl.innerText = `${m}:${s}`;
+                }, 1000);
+
+            }, 2500);
+        }
+
+        function endVideoCall() {
+            clearInterval(activeCallTimer);
+            document.getElementById('videocall-container').classList.add('hidden');
+            
+            if(currentUser && currentUser.role === 'user') {
+                const appt = appointments.find(a => a.user === currentUser.name && a.status === 'Approved');
+                if(appt) appt.status = 'Completed';
+                renderUserAppointments();
+            } else if (currentUser && currentUser.role === 'admin') {
+                renderAdminPanel(); 
+            }
+            
+            openModal('<div class="text-slate-700 dark:text-slate-300 text-4xl mb-4 text-center"><i class="fas fa-phone-slash"></i></div><h2 class="text-xl font-bold dark:text-white text-center">Call Ended</h2><p class="text-slate-500 dark:text-slate-400 mt-2 text-sm text-center">Thank you for using MediCare Tele-Health.</p>');
+        }
+
+        // --- PHARMACY & CART ---
+        function renderMedicines(data) {
+            document.getElementById('medicine-grid').innerHTML = data.map(m => `
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-[32px] border border-slate-100 dark:border-slate-700 card-hover transition flex flex-col group shadow-sm">
+                    <div class="relative overflow-hidden rounded-2xl mb-4 h-48">
+                        <img src="${m.img}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <span class="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur text-slate-800 dark:text-slate-100 text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm">${m.cat}</span>
+                    </div>
+                    <h3 class="font-bold text-lg flex-grow dark:text-white">${m.name}</h3>
+                    <div class="flex items-center justify-between mt-4">
+                        <span class="text-2xl font-black text-teal-600 dark:text-teal-400">$${m.price.toFixed(2)}</span>
+                        <button onclick="addToCart(${m.id}, event)" class="w-12 h-12 bg-slate-900 dark:bg-slate-700 text-white rounded-xl hover:bg-teal-600 dark:hover:bg-teal-500 transition shadow-md flex items-center justify-center"><i class="fas fa-cart-plus"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id, event) {
+            const med = medicines.find(m => m.id === id);
+            const entry = cart.find(c => c.id === id);
+            if(entry) entry.qty++; else cart.push({...med, qty: 1});
+            
+            const btn = event.currentTarget;
+            const originalBg = isDarkMode ? 'bg-slate-700' : 'bg-slate-900';
+            btn.classList.replace(originalBg, 'bg-teal-500');
+            setTimeout(() => btn.classList.replace('bg-teal-500', originalBg), 500);
+            updateCart();
+        }
+
+        function updateCart() {
+            const count = cart.reduce((a, b) => a + b.qty, 0);
+            document.getElementById('cart-count').innerText = count;
+            document.getElementById('cart-count').classList.toggle('hidden', count === 0);
+            
+            const container = document.getElementById('cart-items');
+            if(cart.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 italic">Cart is empty.</p>';
+                document.getElementById('cart-summary').classList.add('hidden');
+                return;
+            }
+            
+            container.innerHTML = cart.map(item => `
+                <div class="flex gap-4 border-b border-slate-100 dark:border-slate-700 pb-4 items-center">
+                    <img src="${item.img}" class="w-16 h-16 rounded-xl object-cover">
+                    <div class="flex-1"><h4 class="font-bold dark:text-white">${item.name}</h4><p class="text-sm text-slate-500 dark:text-slate-400">$${item.price.toFixed(2)} x ${item.qty}</p></div>
+                    <button onclick="cart.splice(cart.indexOf(${item}), 1); updateCart()" class="text-rose-500 hover:text-rose-700 transition"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+            document.getElementById('cart-summary').classList.remove('hidden');
+            document.getElementById('cart-summary').innerHTML = `<h3 class="font-bold text-2xl mb-6 text-slate-900 dark:text-white">Total: <span class="text-teal-600 dark:text-teal-400">$${cart.reduce((s, i) => s + (i.price*i.qty), 0).toFixed(2)}</span></h3><button onclick="openModal('<h2 class=\\'text-2xl font-bold dark:text-white text-center\\'>Order Placed!</h2><p class=\\'text-slate-500 dark:text-slate-400 mt-2 text-center\\'>Your medicines are on their way.</p>')" class="w-full bg-slate-900 dark:bg-teal-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-teal-600 dark:hover:bg-teal-700 transition">Proceed to Checkout</button>`;
+        }
+
+        // --- HEALTH GUIDE / BLOG REPAIRED ---
+         function generateArticleCard(a) {
+            return `
+                <div onclick="openArticle('${a.id}')" class="bg-white dark:bg-slate-800 rounded-[32px] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-700 card-hover transition-all flex flex-col h-full cursor-pointer group">
+                    <div class="overflow-hidden h-48 w-full">
+                        <img src="${a.img}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="p-8 flex-1 flex flex-col">
+                        <span class="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest bg-teal-50 dark:bg-teal-900/30 px-3 py-1 rounded-full w-max mb-3">${a.category}</span>
+                        <h3 class="font-bold text-xl mb-3 text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">${a.title}</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-4 flex-1">Learn essential steps and immediate actions recommended by professionals to handle this health scenario.</p>
+                        <div class="text-teal-600 dark:text-teal-400 font-bold text-sm flex items-center gap-2 mt-auto">Read Article <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderArticles() {
+            // Render first 3 articles for the Home section preview
+            const homeBlogGrid = document.getElementById('home-blog-grid');
+            if (homeBlogGrid) {
+                homeBlogGrid.innerHTML = articles.slice(0, 3).map(a => generateArticleCard(a)).join('');
+            }
+
+            // Render all 7 articles for the dedicated Health Guide page
+            const mainBlogGrid = document.getElementById('blog-grid');
+            if (mainBlogGrid) {
+                mainBlogGrid.innerHTML = articles.map(a => generateArticleCard(a)).join('');
+            }
+        }
+
+        // Triggered by the "View All Articles" button exclusively on the Home Page
+        function expandHomeArticles() {
+            const homeBlogGrid = document.getElementById('home-blog-grid');
+            const btn = document.getElementById('home-view-all-btn');
+            
+            if (homeBlogGrid) {
+                // Instantly inject ALL 7 articles onto the home page grid
+                homeBlogGrid.innerHTML = articles.map(a => generateArticleCard(a)).join('');
+            }
+            
+            if (btn) {
+                // Hide the button to signify all articles are currently displayed
+                btn.style.display = 'none';
+            }
+        }
+
+        function openArticle(id) {
+            const article = articles.find(a => a.id === id);
+            if(article) {
+                openModal(`
+                    <div class="relative h-56 -mt-10 -mx-10 mb-8 rounded-t-[40px] overflow-hidden">
+                        <img src="${article.img}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent flex items-end p-8">
+                            <div>
+                                <span class="text-[10px] font-extrabold text-white uppercase tracking-widest bg-teal-500 backdrop-blur-md px-3 py-1.5 rounded-md shadow-lg mb-3 inline-block">${article.category}</span>
+                                <h2 class="text-2xl md:text-3xl font-extrabold text-white text-left drop-shadow-md leading-tight">${article.title}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-slate-600 dark:text-slate-300 text-left space-y-5 text-sm md:text-base leading-relaxed">
+                        <p class="flex items-start gap-3"><i class="fas fa-check-circle text-teal-500 mt-1"></i> <span><strong>Step 1:</strong> Assess the situation immediately. Ensure the environment is safe before proceeding with any medical aid.</span></p>
+                        <p class="flex items-start gap-3"><i class="fas fa-check-circle text-teal-500 mt-1"></i> <span><strong>Step 2:</strong> Apply the recommended initial treatment. For ${article.title.toLowerCase()}, acting quickly reduces potential complications.</span></p>
+                        <p class="flex items-start gap-3"><i class="fas fa-check-circle text-teal-500 mt-1"></i> <span><strong>Step 3:</strong> If symptoms persist, worsen, or seem severe, immediately contact emergency services or consult a professional via our Tele-Health hub.</span></p>
+                    </div>
+                `);
+            }
+        }
+
+        // --- UTILS ---
+        function openModal(html) {
+            document.getElementById('modal-content').innerHTML = html;
+            // Set dynamic button language
+            document.getElementById('modal-close-btn').innerText = translations[currentLangCode]?.modalGotIt || "Got it";
+            document.getElementById('modal-container').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('modal-container').classList.add('hidden');
+        }
+
+
+    </script>
+</body>
+</html>
